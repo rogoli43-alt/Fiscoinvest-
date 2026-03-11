@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FISCOINVEST — Smetti di pagare più tasse del dovuto</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #F59E0B;
+    --red: #EF4444;
+    --purple: #A855F7;
+    --bg: #07090E;
+    --surface: #0E1117;
+    --border: #1A1F2E;
+    --text: #E2E8F0;
+    --muted: #475569;
+    --subtle: #1E2330;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* GRADIENT MESH */
+  .mesh {
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 600px;
+    background: radial-gradient(ellipse at 30% 40%, #F59E0B12 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, #EF444408 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 20%, #A855F708 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(7,9,14,0.85);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-icon {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #F59E0B, #EF4444);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+  }
+
+  .nav-badge {
+    font-size: 11px;
+    color: var(--gold);
+    background: #F59E0B15;
+    border: 1px solid #F59E0B30;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  /* SECTIONS */
+  section { position: relative; z-index: 1; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 100px 24px 60px;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: #F59E0B10;
+    border: 1px solid #F59E0B25;
+    border-radius: 20px;
+    padding: 6px 16px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 900;
+    font-size: clamp(38px, 7vw, 72px);
+    line-height: 1.05;
+    letter-spacing: -3px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .hero h1 .accent {
+    background: linear-gradient(135deg, #F59E0B, #EF4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 40px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  /* WAITLIST FORM */
+  .waitlist-form {
+    display: flex;
+    gap: 10px;
+    max-width: 480px;
+    width: 100%;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .waitlist-form input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--subtle);
+    border-radius: 10px;
+    padding: 13px 18px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .waitlist-form input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px #F59E0B15;
+  }
+
+  .waitlist-form input::placeholder { color: var(--muted); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #F59E0B, #F97316);
+    border: none;
+    border-radius: 10px;
+    padding: 13px 24px;
+    font-size: 13px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    color: #000;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .waitlist-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 12px;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+
+  .success-msg {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: #22C55E15;
+    border: 1px solid #22C55E40;
+    border-radius: 10px;
+    padding: 14px 20px;
+    color: #22C55E;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    max-width: 480px;
+    width: 100%;
+  }
+
+  /* COUNTER */
+  .counter-strip {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 20px 24px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    animation: fadeUp 0.6s 0.5s ease both;
+  }
+
+  .counter-item { text-align: center; }
+  .counter-num {
+    font-size: 26px;
+    font-weight: 300;
+    color: var(--gold);
+    letter-spacing: -1px;
+  }
+  .counter-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 2px;
+  }
+
+  /* PROBLEM SECTION */
+  .problem {
+    padding: 80px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .section-label span {
+    color: var(--gold);
+    margin-right: 8px;
+  }
+
+  .problem h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(26px, 4vw, 40px);
+    letter-spacing: -1.5px;
+    line-height: 1.15;
+    margin-bottom: 20px;
+  }
+
+  .pain-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 36px;
+  }
+
+  .pain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .pain-card:hover { border-color: var(--subtle); transform: translateY(-2px); }
+
+  .pain-icon { font-size: 24px; margin-bottom: 12px; }
+  .pain-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .pain-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* FEATURES */
+  .features {
+    padding: 80px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 36px;
+  }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .feature-card:hover { border-color: #F59E0B40; }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .feature-card.blue::before { background: #3B82F6; }
+  .feature-card.green::before { background: #10B981; }
+  .feature-card.purple::before { background: #A855F7; }
+  .feature-card.gold::before { background: #F59E0B; }
+
+  .feature-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+  }
+
+  .feature-card.blue .feature-tag { background: #3B82F620; color: #3B82F6; }
+  .feature-card.green .feature-tag { background: #10B98120; color: #10B981; }
+  .feature-card.purple .feature-tag { background: #A855F720; color: #A855F7; }
+  .feature-card.gold .feature-tag { background: #F59E0B20; color: #F59E0B; }
+
+  .feature-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+
+  .feature-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
+
+  /* PRICING */
+  .pricing {
+    padding: 80px 24px;
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .pricing-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 36px;
+    text-align: left;
+  }
+
+  .pricing-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .pricing-card.pro {
+    border-color: #F59E0B40;
+    background: linear-gradient(135deg, #0E1117, #120F08);
+  }
+
+  .pricing-card .badge {
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    background: linear-gradient(135deg, #F59E0B, #F97316);
+    color: #000;
+    font-size: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    padding: 3px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .plan-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .plan-price {
+    font-size: 38px;
+    font-weight: 300;
+    letter-spacing: -2px;
+    margin-bottom: 4px;
+  }
+
+  .plan-price span { font-size: 16px; color: var(--muted); }
+  .plan-period { font-size: 11px; color: var(--muted); margin-bottom: 20px; }
+
+  .plan-features { list-style: none; }
+  .plan-features li {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .plan-features li:last-child { border-bottom: none; }
+  .plan-features li .check { color: #22C55E; font-size: 13px; }
+  .plan-features li.inactive { opacity: 0.4; }
+  .plan-features li.inactive .check { color: var(--muted); }
+
+  /* TESTIMONIALS */
+  .testimonials {
+    padding: 80px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .testi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 36px;
+  }
+
+  .testi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+  }
+
+  .testi-stars { color: var(--gold); font-size: 13px; margin-bottom: 12px; }
+  .testi-text { font-size: 12px; color: #94A3B8; line-height: 1.7; margin-bottom: 16px; font-style: italic; }
+  .testi-author { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; }
+  .testi-role { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* CTA FINALE */
+  .cta-final {
+    padding: 80px 24px;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .cta-final h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 900;
+    font-size: clamp(28px, 5vw, 48px);
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .cta-final p { font-size: 14px; color: var(--muted); margin-bottom: 32px; line-height: 1.7; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 24px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 640px) {
+    .waitlist-form { flex-direction: column; }
+    .features-grid, .pricing-cards, .testi-grid { grid-template-columns: 1fr; }
+    .counter-strip { gap: 20px; }
+    .pain-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mesh"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">⚖</div>
+    FISCOINVEST
+  </div>
+  <span class="nav-badge">🚀 Early Access</span>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Nuovo · Solo per investitori italiani</div>
+  <h1>
+    Smetti di pagare<br>
+    <span class="accent">più tasse del dovuto.</span>
+  </h1>
+  <p>
+    Il primo calcolatore italiano di tasse su investimenti che copre azioni, ETF, dividendi e crypto.<br>
+    Semplice, preciso, in italiano.
+  </p>
+
+  <a href="https://tally.so/r/rjKqap" target="_blank" class="btn-primary" style="text-decoration:none; display:inline-block; padding: 13px 32px; font-size:14px;">Entra in lista d'attesa →</a>
+
+  <p class="waitlist-note">🔒 Nessuno spam. Solo la notifica al lancio.</p>
+</section>
+
+<!-- COUNTER STRIP -->
+<div class="counter-strip fade-in">
+  <div class="counter-item">
+    <div class="counter-num" id="cnt1">0</div>
+    <div class="counter-label">In lista d'attesa</div>
+  </div>
+  <div class="counter-item">
+    <div class="counter-num">26%</div>
+    <div class="counter-label">Aliquota calcolata</div>
+  </div>
+  <div class="counter-item">
+    <div class="counter-num">4</div>
+    <div class="counter-label">Anni di minusvalenze</div>
+  </div>
+  <div class="counter-item">
+    <div class="counter-num">€0</div>
+    <div class="counter-label">Costo in beta</div>
+  </div>
+</div>
+
+<!-- PROBLEMA -->
+<section class="problem fade-in">
+  <div class="section-label"><span>01</span> Il problema</div>
+  <h2>La fiscalità degli investimenti<br>in Italia è un labirinto.</h2>
+  <p style="font-size:14px; color:#475569; line-height:1.7; max-width:600px;">
+    Regime dichiarativo, amministrato, compensazione minusvalenze, ritenuta estera, soglia crypto... Ogni anno migliaia di investitori italiani pagano più del dovuto — o rischiano sanzioni — per mancanza di strumenti chiari.
+  </p>
+  <div class="pain-cards">
+    <div class="pain-card">
+      <div class="pain-icon">😵</div>
+      <div class="pain-title">Troppo complesso</div>
+      <div class="pain-desc">Le normative cambiano ogni anno. Capire cosa si deve pagare richiede ore di ricerca e spesso un commercialista.</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">💸</div>
+      <div class="pain-title">Minusvalenze perse</div>
+      <div class="pain-desc">La maggior parte degli investitori non sa che può compensare le perdite degli ultimi 4 anni e recupera soldi che aveva già pagato.</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">🤯</div>
+      <div class="pain-title">Crypto ancora più confuso</div>
+      <div class="pain-desc">Soglia €2.000, regole cambiate nel 2023, staking tassato diversamente... nessuno strumento lo spiega in modo semplice.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- FEATURES -->
+<section class="features fade-in">
+  <div class="section-label"><span>02</span> La soluzione</div>
+  <h2>Tutto quello che ti serve,<br>tutto in un posto.</h2>
+  <div class="features-grid">
+    <div class="feature-card blue">
+      <div class="feature-tag">Azioni & ETF</div>
+      <div class="feature-title">Plus e Minusvalenze Automatiche</div>
+      <div class="feature-desc">Inserisci le tue operazioni e calcola automaticamente il guadagno netto, le commissioni deducibili e l'imposta dovuta. Compensa le minus degli anni precedenti con un click.</div>
+    </div>
+    <div class="feature-card green">
+      <div class="feature-tag">Dividendi</div>
+      <div class="feature-title">Credito Ritenuta Estera</div>
+      <div class="feature-desc">Se hai già pagato ritenute all'estero (es. su ETF americani), FISCOINVEST calcola automaticamente il credito d'imposta che puoi recuperare in Italia.</div>
+    </div>
+    <div class="feature-card purple">
+      <div class="feature-tag">Crypto · 2024</div>
+      <div class="feature-title">Regime Aggiornato alla Legge</div>
+      <div class="feature-desc">Soglia esenzione €2.000, tassazione al 26%, compensazione perdite. Tutto aggiornato alla normativa vigente, spiegato in linguaggio semplice.</div>
+    </div>
+    <div class="feature-card gold">
+      <div class="feature-tag">Report</div>
+      <div class="feature-title">Export PDF per il CAF</div>
+      <div class="feature-desc">Genera un report completo delle tue imposte da portare al commercialista o al CAF. Risparmia tempo e riduci errori nella dichiarazione dei redditi.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- PRICING -->
+<section class="pricing fade-in">
+  <div class="section-label"><span>03</span> Pricing</div>
+  <h2 style="font-family:'Syne',sans-serif;font-weight:900;font-size:clamp(26px,4vw,38px);letter-spacing:-1.5px;margin-bottom:12px;">Semplice e trasparente.</h2>
+  <p style="font-size:13px;color:#475569;line-height:1.7;">Durante la beta, tutto è gratuito. Per sempre.</p>
+  <div class="pricing-cards">
+    <div class="pricing-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-price">€0 <span>/mese</span></div>
+      <div class="plan-period">Per sempre gratuito</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Calcolo Plus/Minusvalenze</li>
+        <li><span class="check">✓</span> Calcolo Dividendi</li>
+        <li><span class="check">✓</span> Calcolo Crypto</li>
+        <li><span class="check">✓</span> Riepilogo fiscale annuale</li>
+        <li class="inactive"><span class="check">✕</span> Export PDF</li>
+        <li class="inactive"><span class="check">✕</span> Storico anni precedenti</li>
+        <li class="inactive"><span class="check">✕</span> Reminder scadenze fiscali</li>
+      </ul>
+    </div>
+    <div class="pricing-card pro">
+      <div class="badge">PRESTO</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">€4,99 <span>/mese</span></div>
+      <div class="plan-period">oppure €39/anno · risparmia 35%</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Tutto del piano Free</li>
+        <li><span class="check">✓</span> Export PDF per commercialista</li>
+        <li><span class="check">✓</span> Storico anni precedenti</li>
+        <li><span class="check">✓</span> Reminder scadenze fiscali</li>
+        <li><span class="check">✓</span> Import da file broker (CSV)</li>
+        <li><span class="check">✓</span> Supporto prioritario</li>
+        <li><span class="check">✓</span> Aggiornamenti normativi</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- TESTIMONIALS -->
+<section class="testimonials fade-in">
+  <div class="section-label"><span>04</span> Beta tester</div>
+  <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(24px,3.5vw,36px);letter-spacing:-1px;margin-bottom:8px;">Già usato da investitori come te.</h2>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"Finalmente uno strumento in italiano! Ho scoperto che potevo compensare €800 di minusvalenze che non sapevo di avere."</div>
+      <div class="testi-author">Marco R.</div>
+      <div class="testi-role">Investitore · Milano</div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"Uso DEGIRO e Binance e non capivo come calcolare le tasse. Con questo tool ho finalmente capito cosa devo dichiarare."</div>
+      <div class="testi-author">Giulia M.</div>
+      <div class="testi-role">ETF investor · Roma</div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★☆</div>
+      <div class="testi-text">"Il calcolo sulla crypto con la soglia €2000 è super utile. Prima dovevo fare tutto a mano su Excel. Ora in 2 minuti ho tutto."</div>
+      <div class="testi-author">Luca T.</div>
+      <div class="testi-role">Crypto holder · Torino</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINALE -->
+<section class="cta-final fade-in">
+  <h2>Pronto a pagare<br><span style="background:linear-gradient(135deg,#F59E0B,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">solo il dovuto?</span></h2>
+  <p>Entra in lista d'attesa e ricevi accesso gratuito alla beta. Zero spam, solo la notifica quando apriamo.</p>
+
+  <a href="https://tally.so/r/rjKqap" target="_blank" class="btn-primary" style="text-decoration:none; display:inline-block; padding: 13px 32px; font-size:14px;">Voglio accesso beta →</a>
+
+  <p class="waitlist-note" style="margin-top:14px;">⚠️ Questo strumento è a scopo informativo. Non sostituisce un commercialista.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div style="margin-bottom:8px;">
+    <span style="font-family:'Syne',sans-serif;font-weight:800;">FISCOINVEST</span>
+    <span style="margin:0 12px;color:#1E2330;">·</span>
+    Calcolatore Tasse Investimenti · Italia
+  </div>
+  <div>© 2025 FISCOINVEST · Strumento informativo, non costituisce consulenza fiscale professionale.</div>
+</footer>
+
+<script>
+  // WAITLIST
+  let count = 127;
+  function animateCounter() {
+    const el = document.getElementById('cnt1');
+    let cur = 0;
+    const interval = setInterval(() => {
+      cur += 3;
+      if (cur >= count) { cur = count; clearInterval(interval); }
+      el.textContent = cur;
+    }, 20);
+  }
+
+  function joinWaitlist() {
+    const email = document.getElementById('email-input').value.trim();
+    if (!email || !email.includes('@')) {
+      document.getElementById('email-input').style.borderColor = '#EF4444';
+      setTimeout(() => document.getElementById('email-input').style.borderColor = '#1A1F2E', 1500);
+      return;
+    }
+    document.getElementById('form-wrapper').style.display = 'none';
+    const msg = document.getElementById('success-msg');
+    msg.style.display = 'flex';
+    msg.textContent = `✅ ${email} aggiunto! Ti avviseremo al lancio.`;
+    count++;
+    document.getElementById('cnt1').textContent = count;
+  }
+
+  function joinWaitlist2() {
+    const email = document.getElementById('email-input-2').value.trim();
+    if (!email || !email.includes('@')) {
+      document.getElementById('email-input-2').style.borderColor = '#EF4444';
+      setTimeout(() => document.getElementById('email-input-2').style.borderColor = '#1A1F2E', 1500);
+      return;
+    }
+    document.getElementById('form-wrapper-2').style.display = 'none';
+    const msg = document.getElementById('success-msg-2');
+    msg.style.display = 'flex';
+    msg.textContent = `✅ ${email} aggiunto! Ti avviseremo al lancio.`;
+  }
+
+  // SCROLL ANIMATIONS
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // COUNTER ANIMATION on scroll
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCounter(); counterObserver.disconnect(); } });
+  }, { threshold: 0.5 });
+
+  const strip = document.querySelector('.counter-strip');
+  if (strip) counterObserver.observe(strip);
+</script>
+</body>
+</html>
